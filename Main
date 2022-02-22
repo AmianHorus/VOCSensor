@@ -1,0 +1,68 @@
+#include <SPI.h>
+//#include <SD.h>
+#include "SdFat.h"
+#include <Wire.h>
+#include "RTClib.h"
+SdFat SD;
+
+RTC_DS1307 rtc;
+
+#define SD_CS_PIN SS
+File myFile;
+
+void setup() {
+  // Open serial communications and wait for port to open:
+  Serial.begin(9600);
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+
+  if (!SD.begin(SD_CS_PIN)) {
+    Serial.println("initialization failed!");
+    return;
+  }
+  Serial.println("Initialization done.");
+
+  // create the file . 
+  myFile = SD.open("gasdata.txt", FILE_WRITE);
+  myFile.close();
+
+  if(!rtc.begin()) {
+    
+    Serial.println("Couldn;t find RTC");
+    while (1);
+  }
+
+  if(!rtc.isrunning()) {
+    Serial.println("RTC is not running.");
+  }
+
+}
+
+void loop() {
+
+  int interval = 10000; //value of delay between readings
+
+  while(0==1) {
+
+    int i = 0; //counting
+    DateTime now = rtc.now(); //reads data from RTC
+    int month = now.month();
+    int year = now.year();
+    int day = now.day();
+    int hour = now.hour();
+    int min = now.minute();
+    int sec = now.second(); //collects values from the rtc which was previously read and stores them
+    int array[] = {year, month, day, hour, min, sec};
+   
+    myFile = SD.open("gasdata.txt", FILE_WRITE);
+    
+      for(i=0; i<6; i++) {
+        myFile.write("%d ", array[i]);
+      }
+      myFile.print("\n");
+      
+    myFile.close(); // close the file:
+    delay(interval); 
+  }
+}
